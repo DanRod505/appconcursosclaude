@@ -1,0 +1,59 @@
+<meta charset="utf-8">
+<title>Concurso+</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Protótipo de app de estudo para concursos públicos com trilha, ofensiva, revisão espaçada e simulados.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="estilos.css">
+<script>
+  // Aplica estilo e tema salvos antes da pintura, para não piscar.
+  (function () {
+    var r = document.documentElement;
+    r.dataset.style = "neo";
+    try {
+      var e = JSON.parse(localStorage.getItem("concursomais.v1") || "null");
+      if (e && e.estilo === "glass") r.dataset.style = "glass";
+      if (e && e.tema === "claro") r.dataset.theme = "light";
+      if (e && e.tema === "escuro") r.dataset.theme = "dark";
+    } catch (_) { /* sem armazenamento: usa o padrão */ }
+  })();
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gradAnel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" style="stop-color:var(--accent-2)"></stop>
+      <stop offset="1" style="stop-color:var(--accent)"></stop>
+    </linearGradient>
+    <linearGradient id="gradOuro" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" style="stop-color:var(--gold-2)"></stop>
+      <stop offset="1" style="stop-color:var(--gold)"></stop>
+    </linearGradient>
+    <linearGradient id="gradFogo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" style="stop-color:var(--gold-2)"></stop>
+      <stop offset="1" style="stop-color:var(--fire)"></stop>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="fundo" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+
+<div class="app" id="app">
+  <aside class="lateral" id="lateral"></aside>
+  <main class="principal">
+    <header class="topo" id="topo"></header>
+    <div class="view" id="view"></div>
+  </main>
+  <aside class="aside" id="aside" aria-label="Resumo do dia"></aside>
+</div>
+<nav class="navbar so-mobile" id="navbar" aria-label="Navegação principal"></nav>
+<section class="licao" id="licao" hidden aria-live="polite"></section>
+<div id="modal-raiz"></div>
+<div id="toast-raiz" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.js"></script>
+<script src="conteudo.js"></script>
+<script src="sons.js"></script>
+<script src="app.js"></script>
