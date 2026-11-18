@@ -381,6 +381,7 @@
       '<div class="campo"><span class="rotulo">Tema</span>' + seletorTema() + "</div></section>";
     h += '<section class="card bloco"><div class="linha-config"><div><b>Efeitos sonoros</b><small>Acerto, erro, combo, conclusão e desbloqueio</small></div>' +
       '<button class="switch" role="switch" aria-checked="' + E.som + '" aria-label="Efeitos sonoros" data-acao="som"></button></div>' +
+      '<p class="estado-audio" id="estado-audio">Áudio: ' + Sons.estado() + '. No iPhone, confira também o volume de mídia.</p>' +
       '<div class="botoes-som">' + [["acerto", "Acerto"], ["erro", "Erro"], ["combo", "Combo"], ["concluir", "Conclusão"], ["ofensiva", "Ofensiva"], ["desbloquear", "Desbloqueio"]]
         .map(([s, t]) => '<button class="btn btn-sec peq" data-acao="testar-som" data-valor="' + s + '">' + ic("volume-2") + t + "</button>").join("") + "</div></section>";
     h += '<section class="card bloco"><div class="linha-config"><div><b>Reiniciar demonstração</b><small>Volta para os dados de exemplo: 12 dias de ofensiva e 2 lições concluídas.</small></div>' +
@@ -887,6 +888,7 @@
       case "testar-som":
         if (!E.som) { toast(ic("volume-x") + "Ative os efeitos sonoros primeiro", true); break; }
         Sons.tocar(v, 3);
+        setTimeout(() => { const ea = $("#estado-audio"); if (ea) ea.textContent = "Áudio: " + Sons.estado() + ". No iPhone, confira também o volume de mídia."; }, 300);
         break;
       case "no":
         ev.stopPropagation();

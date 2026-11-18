@@ -8,6 +8,7 @@ window.Sons = (function () {
   let saida = null;
   let ativo = true;
   let ruidoBuf = null;
+  let tagSilencio = null;
 
   function contexto() {
     if (!ctx) {
@@ -15,14 +16,52 @@ window.Sons = (function () {
       if (!AC) return null;
       ctx = new AC();
       saida = ctx.createGain();
-      saida.gain.value = 0.55;
+      saida.gain.value = 0.9;
       const comp = ctx.createDynamicsCompressor();
       saida.connect(comp);
       comp.connect(ctx.destination);
     }
-    if (ctx.state === "suspended") ctx.resume();
+    if (ctx.state !== "running" && ctx.state !== "closed") ctx.resume().catch(function () {});
     return ctx;
   }
+
+  /*
+   * Desbloqueio do áudio, chamado a cada toque, clique ou tecla.
+   * - Navegadores só liberam o áudio dentro de um gesto do usuário.
+   * - No iPhone, a Web Audio fica muda com a chave de silencioso ligada. Pedir a sessão de áudio
+   *   como "playback" e manter um <audio> silencioso tocando faz o som sair mesmo assim.
+   */
+  function desbloquear() {
+    if (!ativo) return;
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) { /* opcional */ }
+    const c = contexto();
+    if (!c) return;
+    try {
+      const b = c.createBuffer(1, 1, 22050);
+      const src = c.createBufferSource();
+      src.buffer = b;
+      src.connect(c.destination);
+      src.start(0);
+    } catch (e) { /* ignora */ }
+    try {
+      if (!tagSilencio) {
+        tagSilencio = new Audio("silencio.wav");
+        tagSilencio.loop = true;
+        tagSilencio.setAttribute("playsinline", "");
+        tagSilencio.preload = "auto";
+      }
+      if (tagSilencio.paused && document.visibilityState === "visible") tagSilencio.play().catch(function () {});
+    } catch (e) { /* ignora */ }
+  }
+  ["pointerdown", "touchend", "keydown", "click"].forEach(function (ev) {
+    document.addEventListener(ev, desbloquear, { capture: true, passive: true });
+  });
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") {
+      if (tagSilencio) tagSilencio.pause();
+      if (ctx && ctx.state === "running") ctx.suspend().catch(function () {});
+    }
+  });
 
   // Um tom com envelope de ataque e decaimento exponencial.
   function tom(f, t0, dur, o) {
@@ -78,7 +117,7 @@ window.Sons = (function () {
   const N = { C5: 523.25, E5: 659.25, G5: 783.99, A5: 880, C6: 1046.5, D6: 1174.66, E6: 1318.51, G6: 1567.98, C7: 2093 };
 
   const biblioteca = {
-    toque(t) { tom(900, t, 0.05, { tipo: "triangle", vol: 0.06 }); },
+    toque(t) { tom(900, t, 0.06, { tipo: "triangle", vol: 0.12 }); },
     selecionar(t) { tom(480, t, 0.09, { tipo: "triangle", vol: 0.12, f2: 720 }); },
     chip(t) { tom(660, t, 0.07, { tipo: "triangle", vol: 0.12 }); tom(990, t + 0.03, 0.08, { vol: 0.06 }); },
     acerto(t) {
@@ -123,7 +162,7 @@ window.Sons = (function () {
       tom(300, t, 0.08, { tipo: "square", vol: 0.06, filtro: 1000 });
       tom(240, t + 0.09, 0.12, { tipo: "square", vol: 0.06, filtro: 900 });
     },
-    tick(t) { tom(1500, t, 0.035, { tipo: "triangle", vol: 0.035 }); },
+    tick(t) { tom(1500, t, 0.04, { tipo: "triangle", vol: 0.06 }); },
     meta(t) {
       [N.C6, N.D6, N.E6, N.G6].forEach((f, i) => tom(f, t + i * 0.08, 0.25, { vol: 0.1 }));
     },
@@ -142,6 +181,14 @@ window.Sons = (function () {
       try { biblioteca[nome](c.currentTime + 0.01, arg); } catch (e) { /* som é opcional */ }
     },
     get ativo() { return ativo; },
-    set ativo(v) { ativo = !!v; }
+    set ativo(v) {
+      ativo = !!v;
+      if (!ativo && tagSilencio) tagSilencio.pause();
+    },
+    estado() {
+      if (!(window.AudioContext || window.webkitAudioContext)) return "indisponível neste navegador";
+      if (!ctx) return "aguardando o primeiro toque";
+      return ctx.state === "running" ? "ativo" : ctx.state === "suspended" ? "suspenso pelo navegador" : ctx.state;
+    }
   };
 })();

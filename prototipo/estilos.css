@@ -718,3 +718,4 @@ body.em-licao .app, body.em-licao .navbar { display: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+.estado-audio { color: var(--fg-2); font-weight: 600; font-size: 13px; }
